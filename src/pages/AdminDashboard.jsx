@@ -118,6 +118,17 @@ const AdminDashboard = () => {
         }
     };
 
+    const handleDeleteUser = async (id, email) => {
+        if (!window.confirm(`Delete user ${email}? This cannot be undone.`)) return;
+        try {
+            const res = await api.delete(`/admin/users/${id}`);
+            toast.success(res.data.message);
+            fetchProvisionedUsers();
+        } catch (error) {
+            toast.error('Failed to delete: ' + (error.response?.data?.message || error.message));
+        }
+    };
+
     return (
         <div className="space-y-12 pb-12 animate-fade-in-up">
             <div>
@@ -287,13 +298,14 @@ const AdminDashboard = () => {
                                         <th className="text-left pb-3 pr-4">Role</th>
                                         <th className="text-left pb-3">Department</th>
                                         <th className="text-left pb-3">Status</th>
+                                        <th className="text-left pb-3">Actions</th>
                                     </tr>
                                 </thead>
                                 <tbody className="divide-y divide-slate-50">
                                     {provisionedUsers.map(u => (
                                         <tr key={u._id} className="hover:bg-slate-50 transition-colors">
                                             <td className="py-3 pr-4 font-medium text-slate-700">{u.email}</td>
-                                            <td className="py-3 pr-4 text-slate-500">{u.name === 'Pending User' ? <span className="italic text-slate-300">Pending registration</span> : u.name}</td>
+                                            <td className="py-3 pr-4 text-slate-500">{u.isPending ? <span className="italic text-slate-300">Pending registration</span> : (u.name === 'Pending User' ? (ROLE_LABELS[u.role] || u.role) : u.name)}</td>
                                             <td className="py-3 pr-4">
                                                 <span className={`text-xs font-extrabold px-2.5 py-1 rounded-full border ${ROLE_COLORS[u.role] || 'bg-slate-100 text-slate-500'}`}>
                                                     {ROLE_LABELS[u.role] || u.role}
@@ -301,7 +313,7 @@ const AdminDashboard = () => {
                                             </td>
                                             <td className="py-3 pr-4 text-slate-500">{u.departmentId?.name || <span className="text-slate-300">—</span>}</td>
                                             <td className="py-3">
-                                                {u.name === 'Pending User'
+                                                {u.isPending
                                                     ? <div className="flex items-center gap-2">
                                                         <span className="text-xs font-bold text-red-600 bg-red-50 border border-red-200 px-2 py-1 rounded-full">Inactive</span>
                                                         <button
@@ -312,6 +324,13 @@ const AdminDashboard = () => {
                                                     </div>
                                                     : <span className="text-xs font-bold text-emerald-600 bg-emerald-50 border border-emerald-200 px-2 py-1 rounded-full">Active</span>
                                                 }
+                                            </td>
+                                            <td className="py-3">
+                                                <button
+                                                    onClick={() => handleDeleteUser(u._id, u.email)}
+                                                    className="text-xs font-bold text-red-500 hover:text-red-700 hover:bg-red-50 border border-red-200 px-2 py-1 rounded-full transition-colors"
+                                                    title="Delete user"
+                                                >🗑 Delete</button>
                                             </td>
                                         </tr>
                                     ))}
