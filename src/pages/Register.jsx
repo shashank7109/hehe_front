@@ -40,9 +40,11 @@ const Register = () => {
     setLoading(true);
     try {
       const res = await api.post('/auth/register', formData);
-      // Store token and set user directly from register response — no second API call needed
+      // Store token and set user directly from register response
       localStorage.setItem('token', res.data.token);
-      setUser(res.data);
+      // Cleanly set user state without the token
+      const { token, ...userData } = res.data;
+      setUser(userData);
       toast.success('Registration successful!');
       navigate('/'); // root route handles role-based redirect
     } catch (err) {

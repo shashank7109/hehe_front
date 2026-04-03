@@ -20,6 +20,7 @@ export const formatDate = (dateString) => {
 /** Builds an absolute URL for an uploaded file path stored in DB */
 export const formatFileUrl = (dbPath) => {
   if (!dbPath) return '#';
+  if (dbPath.startsWith('http')) return dbPath; // Cloudinary URL
   const cleanPath = dbPath.includes('uploads/')
     ? dbPath.substring(dbPath.indexOf('uploads/'))
     : dbPath;

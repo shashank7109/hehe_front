@@ -1,6 +1,5 @@
-import React, { useState, useEffect, useContext, useMemo } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import api from '../api';
-import { AuthContext } from '../context/AuthContext';
 import { toast } from 'react-hot-toast';
 import { formatDate, formatFileUrl, calculateDuration, calculateStudentYear, formatTodayDate, getGreeting } from '../utils/helpers';
 
@@ -190,8 +189,9 @@ const AppCard = ({ app, actionType, remarks, setRemarks, handleAction }) => {
           {actionType === 'NONE' && (
             <div className="flex flex-col items-end gap-2">
               <span className={`px-4 py-1.5 rounded-full text-[10px] font-black uppercase tracking-widest border ${app.status.includes('REJECTED') ? 'bg-rose-50 text-rose-600 border-rose-100' :
-                app.status.includes('APPROVED') ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
-                  'bg-slate-100 text-slate-600 border-slate-200'
+                app.status === 'COLLECTED' ? 'bg-indigo-50 text-indigo-700 border-indigo-100' :
+                  (app.status === 'READY_FOR_COLLECTION' || app.status.includes('APPROVED')) ? 'bg-emerald-50 text-emerald-600 border-emerald-100' :
+                    'bg-slate-100 text-slate-600 border-slate-200'
                 }`}>
                 {app.status.replace(/_/g, ' ')}
               </span>
@@ -250,7 +250,6 @@ const AppCard = ({ app, actionType, remarks, setRemarks, handleAction }) => {
 };
 
 const TNPHeadDashboard = () => {
-  const { user } = useContext(AuthContext);
   const [applications, setApplications] = useState([]);
   const [departments, setDepartments] = useState([]);
   const [remarks, setRemarks] = useState({});
@@ -306,13 +305,16 @@ const TNPHeadDashboard = () => {
     return applications.filter(a => a.status === 'UNDER_REVIEW_HEAD');
   }, [applications]);
 
+  const outboxApps = useMemo(() => {
+    return applications.filter(a => a.status === 'READY_FOR_COLLECTION');
+  }, [applications]);
+
   const pastApps = useMemo(() => {
     return applications.filter(a => {
-      const isHistorical = a.status !== 'UNDER_REVIEW_HEAD' && a.status !== 'READY_FOR_COLLECTION';
-      const isMine = (a.approvedBy?._id || a.approvedBy) === user?._id || (a.rejectedBy?._id || a.rejectedBy) === user?._id;
-      return isHistorical && isMine;
+      // Master Ledger: Include everything that moved past review stages
+      return a.status !== 'UNDER_REVIEW_HEAD' && a.status !== 'PENDING' && a.status !== 'UNDER_REVIEW_DEPT';
     });
-  }, [applications, user]);
+  }, [applications]);
 
   const filteredHistoryApps = useMemo(() => {
     const approvedStatuses = ['READY_FOR_COLLECTION', 'COLLECTED'];
@@ -392,14 +394,21 @@ const TNPHeadDashboard = () => {
               onClick={() => setActiveTab('review')}
               className={`px-8 py-2.5 text-sm transition-all duration-200 rounded-xl flex items-center gap-2 ${activeTab === 'review' ? 'bg-white shadow-md text-indigo-700 font-bold' : 'text-slate-500 hover:text-slate-700 font-medium'}`}
             >
-              Pending Review
+              Inbox
               {pendingApps.length > 0 && <span className="bg-amber-100 text-amber-700 px-2 py-0.5 rounded-full text-[10px] font-black">{pendingApps.length}</span>}
+            </button>
+            <button
+              onClick={() => setActiveTab('outbox')}
+              className={`px-8 py-2.5 text-sm transition-all duration-200 rounded-xl flex items-center gap-2 ${activeTab === 'outbox' ? 'bg-white shadow-md text-indigo-700 font-bold' : 'text-slate-500 hover:text-slate-700 font-medium'}`}
+            >
+              Outbox
+              {outboxApps.length > 0 && <span className="bg-emerald-100 text-emerald-700 px-2 py-0.5 rounded-full text-[10px] font-black">{outboxApps.length}</span>}
             </button>
             <button
               onClick={() => setActiveTab('history')}
               className={`px-8 py-2.5 text-sm transition-all duration-200 rounded-xl ${activeTab === 'history' ? 'bg-white shadow-md text-indigo-700 font-bold' : 'text-slate-500 hover:text-slate-700 font-medium'}`}
             >
-              History Archive
+              Archive
             </button>
           </div>
         </div>
@@ -407,10 +416,10 @@ const TNPHeadDashboard = () => {
         {activeTab === 'review' && (
           <div className="space-y-6">
             {fetching ? (
-            <div className="flex justify-center py-16">
-              <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
-            </div>
-          ) : pendingApps.length === 0 ? (
+              <div className="flex justify-center py-16">
+                <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+              </div>
+            ) : pendingApps.length === 0 ? (
               <EmptyState
                 title="All Caught Up!"
                 message="No applications are currently waiting for your final review."
@@ -418,6 +427,24 @@ const TNPHeadDashboard = () => {
               />
             ) : pendingApps.map(app =>
               <AppCard key={app._id} app={app} actionType="REVIEW" remarks={remarks} setRemarks={setRemarks} handleAction={handleAction} />
+            )}
+          </div>
+        )}
+
+        {activeTab === 'outbox' && (
+          <div className="space-y-6">
+            {fetching ? (
+              <div className="flex justify-center py-16">
+                <div className="w-10 h-10 border-4 border-indigo-200 border-t-indigo-600 rounded-full animate-spin" />
+              </div>
+            ) : outboxApps.length === 0 ? (
+              <EmptyState
+                title="Outbox Empty"
+                message="No applications are currently waiting for student collection."
+                icon={<svg className="w-10 h-10" fill="none" viewBox="0 0 24 24" stroke="currentColor"><path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M20 13V6a2 2 0 00-2-2H6a2 2 0 00-2 2v7m16 0a2 2 0 01-2 2H6a2 2 0 01-2-2m16 0V9a2 2 0 00-2-2H6a2 2 0 00-2 2v4m16 4v1a2 2 0 01-2 2H6a2 2 0 01-2-2v-1m16 0H4" /></svg>}
+              />
+            ) : outboxApps.map(app =>
+              <AppCard key={app._id} app={app} actionType="NONE" remarks={remarks} setRemarks={setRemarks} handleAction={handleAction} />
             )}
           </div>
         )}
