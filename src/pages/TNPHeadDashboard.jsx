@@ -109,7 +109,7 @@ const ExpandedDetails = ({ app }) => (
     {/* Mentor & Addressee */}
     <div className="grid grid-cols-1 md:grid-cols-2 gap-6 pt-4 border-t border-slate-200">
       <div className="space-y-2">
-        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Internal Mentor</h4>
+        <h4 className="text-[10px] font-black text-slate-400 uppercase tracking-[0.2em]">Mentor / H.O.D. / Contact Person</h4>
         <p className="text-sm font-bold text-slate-800">{app.mentorName}</p>
         <p className="text-xs text-slate-500">{app.mentorDesignation} | {app.mentorEmail} | {app.mentorContact}</p>
       </div>

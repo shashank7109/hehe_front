@@ -21,7 +21,7 @@ const ExpandedDetails = ({ app }) => (
     <div className="md:col-span-2"><strong className="text-slate-900">Org Address:</strong> {app.organizationAddress}</div>
 
     <div className="pt-4 mt-2 border-t border-slate-200">
-      <h4 className="font-extrabold text-slate-900 uppercase tracking-widest text-xs mb-2">Contact Person/ Mentor / H.O.D. Details</h4>
+      <h4 className="font-extrabold text-slate-900 uppercase tracking-widest text-xs mb-2">Mentor / H.O.D. / Contact Person Details</h4>
       <p className="font-medium">{app.mentorName} ({app.mentorDesignation})</p>
       <p className="text-slate-500">{app.mentorEmail} | {app.mentorContact}</p>
     </div>
@@ -426,7 +426,7 @@ const StudentDashboard = () => {
               <div className="bg-white shadow-sm border border-slate-100 rounded-2xl p-8 space-y-6">
                 <div className="flex items-center gap-3 border-b border-slate-50 pb-4 mb-2">
                   <div className="w-8 h-8 bg-blue-50 rounded-lg flex items-center justify-center text-blue-600 font-black text-sm">4</div>
-                  <h3 className="font-black text-base text-slate-800 uppercase tracking-tight">Mentor / H.O.D. Details</h3>
+                  <h3 className="font-black text-base text-slate-800 uppercase tracking-tight">Mentor / H.O.D. / Contact Person Details</h3>
                 </div>
 
                 <div className="space-y-4">
